@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -30,9 +31,22 @@ async function run() {
     const reviewCollection = client.db("bistroBossDB").collection("reviews");
     const cartCollection = client.db("bistroBossDB").collection("carts");
 
+    // jwt related api
+    app.post("/jwt", async (req, res) => {
+      const user = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1hr",
+      });
+      res.send({ token });
+    });
+
     // user related api
     app.post("/users", async (req, res) => {
       const user = req.body;
+      const email = { email: user.email };
+      const existingUser = userCollection.findOne(email);
+      if (existingUser) {
+        return res.send({ message: "user already exist", insertedId: null });
+      }
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
